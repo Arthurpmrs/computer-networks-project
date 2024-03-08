@@ -45,6 +45,7 @@ def tcp_server():
             print(f"\n\nTCP tunnel stablished with {client_address}.")
         except KeyboardInterrupt:
             print("\nTerminating server...")
+            server_socket.close()
             sys.exit()
 
         message = connection_socket.recv(1024)
