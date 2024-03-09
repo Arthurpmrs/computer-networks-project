@@ -2,14 +2,20 @@ import sys
 import time
 import json
 import logging
-from logging.handlers import RotatingFileHandler
 from socket import socket, AF_INET, SOCK_DGRAM, SOCK_STREAM
- 
+from nfs.config import SERVER_PORT, CONFIG_FOLDER
+
+logger = logging.getLogger(__name__)
+
 def power_of_2(n: str) -> str:
     n_int = int(n)
     time.sleep(3)
     return str(n_int ** 2)
 
+def add(a: str, b: str) -> str:
+    a_int = int(a)
+    b_int = int(b)
+    return str(b_int + a_int)
 
 def udp_server():
     server_port = 12000
@@ -37,18 +43,26 @@ def handle_request(message: str) -> str:
     try:
         data = json.loads(message)
         request_type = data["type"]
-    except(json.JSONDecodeError, TypeError):
+    except(json.JSONDecodeError, TypeError, KeyError):
+        logger.error("Host sent an invalid request.")
         return "Invalid request."
 
     if request_type == "square":
+        logger.info("Host sent a request to square a number.")
         return power_of_2(data["number"])
+    elif request_type == "sum":
+        logger.info("Host sent a request to sum two numbers.")
+        try:
+            result =  add(data["a"], data["b"])
+        except KeyError:
+            logger.error("Host sent invalid data.")
+            return "Invalid data sent."
     else:
+        logger.error("Host sent an invalid request.")
         return "Invalid request."
 
 def tcp_server():
-    logger = logging.getLogger(__name__)
-
-    welcoming_port = 12000
+    welcoming_port = SERVER_PORT
     server_socket = socket(AF_INET, SOCK_STREAM)
 
     server_socket.bind(("", welcoming_port))

@@ -37,6 +37,19 @@ def handle_square(selected_host: str) -> None:
 
     tcp_client(selected_host, json.dumps(data))
 
+def handle_sum(selected_host: str) -> None:
+    a = input("\nEnter the first number: ")
+    b = input("Enter the second number: ")
+    
+    
+    data: dict[str, str] = {
+        "type": "sum",
+        "a": a,
+        "b": b
+    }
+
+    tcp_client(selected_host, json.dumps(data))
+
 def main():
     print("App started")
     server_thread = threading.Thread(target=tcp_server)
@@ -68,6 +81,11 @@ def main():
                     print("You must select a host first.")
                     continue
                 handle_square(selected_host)
+            elif option == 4:
+                if selected_host == "":
+                    print("You must select a host first.")
+                    continue
+                handle_sum(selected_host)
             else:
                 print("Exiting app...")
                 sys.exit()
