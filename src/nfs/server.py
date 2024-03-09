@@ -1,8 +1,10 @@
 import sys
 import time
+import json
+import logging
+from logging.handlers import RotatingFileHandler
 from socket import socket, AF_INET, SOCK_DGRAM, SOCK_STREAM
-
-
+ 
 def power_of_2(n: str) -> str:
     n_int = int(n)
     time.sleep(3)
@@ -31,31 +33,45 @@ def udp_server():
         server_socket.sendto(response.encode(), client_address)
 
 
+def handle_request(message: str) -> str:
+    try:
+        data = json.loads(message)
+        request_type = data["type"]
+    except(json.JSONDecodeError, TypeError):
+        return "Invalid request."
+
+    if request_type == "square":
+        return power_of_2(data["number"])
+    else:
+        return "Invalid request."
+
 def tcp_server():
+    logger = logging.getLogger(__name__)
+
     welcoming_port = 12000
     server_socket = socket(AF_INET, SOCK_STREAM)
 
     server_socket.bind(("", welcoming_port))
     server_socket.listen(1)
 
-    print("The server is up and running.")
+    logger.info("The server is up and running.")
     while True:
         try:
             connection_socket, client_address = server_socket.accept()
-            print(f"\n\nTCP tunnel stablished with {client_address}.")
+            logger.info(f"TCP tunnel stablished with {client_address}.")
         except KeyboardInterrupt:
-            print("\nTerminating server...")
+            logger.info("Terminating server...")
             server_socket.close()
             sys.exit()
 
         message = connection_socket.recv(1024)
-        print("Recieving...")
-        print(f"    Client Message: {message.decode()}")
-
-        response = power_of_2(message.decode())
+        logger.info("Recieving...")
+        logger.info(f"    Client Message: {message.decode()}")
+    
+        response = handle_request(message.decode())
         connection_socket.send(response.encode())
 
-        print(f"TCP tunnel with {client_address} closed.")
+        logger.info(f"TCP tunnel with {client_address} closed.")
         connection_socket.close()
 
 
