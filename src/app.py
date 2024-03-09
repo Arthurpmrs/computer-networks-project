@@ -119,12 +119,12 @@ def main():
             elif option == 2:
                 selected_host = select_a_host()
             elif option == 3:
-                if selected_host:
+                if selected_host is None:
                     print("You must select a host first.")
                     continue
                 handle_square(selected_host["ip"])
             elif option == 4:
-                if selected_host == "":
+                if selected_host is None:
                     print("You must select a host first.")
                     continue
                 handle_sum(selected_host["ip"])
