@@ -22,13 +22,13 @@ def udp_client():
     client_socket.close()
 
 
-def tcp_client():
-    server_name = '192.168.0.36'
+def tcp_client(server_name: str, number: int):
+    # server_name = '192.168.0.36'
     server_port = 12000
 
-    n = input("Digite um número para ser elevado ao quadrado: ")
+    # n = input("Digite um número para ser elevado ao quadrado: ")
 
-    message = str(n).encode()
+    message = str(number).encode()
 
     client_socket = socket(AF_INET, SOCK_STREAM)
     client_socket.connect((server_name, server_port))
