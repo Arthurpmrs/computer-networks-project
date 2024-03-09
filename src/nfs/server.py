@@ -2,6 +2,7 @@ import sys
 import time
 import json
 import logging
+import threading
 from socket import socket, AF_INET, SOCK_DGRAM, SOCK_STREAM
 from nfs.config import SERVER_PORT, CONFIG_FOLDER
 
@@ -61,32 +62,44 @@ def handle_request(message: str) -> str:
         logger.error("Host sent an invalid request.")
         return "Invalid request."
 
+def handle_client(connection_socket: socket, client_address: tuple[str, str]):
+    while True:
+        data = connection_socket.recv(1024)
+        if not data:
+            break
+
+        message = data.decode()
+        logger.info(f"Recieving from {client_address}...")
+        logger.info(f"    Client Message: {message}")
+
+        response = handle_request(message)
+        connection_socket.send(response.encode())
+
+    logger.info(f"TCP tunnel with {client_address} closed.")
+    connection_socket.close()
+
 def tcp_server():
     welcoming_port = SERVER_PORT
     server_socket = socket(AF_INET, SOCK_STREAM)
 
     server_socket.bind(("", welcoming_port))
-    server_socket.listen(1)
+    server_socket.listen(10)
 
     logger.info("The server is up and running.")
     while True:
         try:
             connection_socket, client_address = server_socket.accept()
             logger.info(f"TCP tunnel stablished with {client_address}.")
+            
+            client_thread = threading.Thread(
+                target=handle_client, 
+                args=(connection_socket, client_address)
+            )
+            client_thread.start()
         except KeyboardInterrupt:
             logger.info("Terminating server...")
             server_socket.close()
             sys.exit()
-
-        message = connection_socket.recv(1024)
-        logger.info("Recieving...")
-        logger.info(f"    Client Message: {message.decode()}")
-    
-        response = handle_request(message.decode())
-        connection_socket.send(response.encode())
-
-        logger.info(f"TCP tunnel with {client_address} closed.")
-        connection_socket.close()
 
 
 if __name__ == "__main__":
