@@ -53,7 +53,7 @@ def handle_request(message: str) -> str:
     elif request_type == "sum":
         logger.info("Host sent a request to sum two numbers.")
         try:
-            result =  add(data["a"], data["b"])
+            return add(data["a"], data["b"])
         except KeyError:
             logger.error("Host sent invalid data.")
             return "Invalid data sent."
