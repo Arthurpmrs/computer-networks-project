@@ -39,12 +39,12 @@ class DBhandler:
         self.con = con
         self.logger = logging.getLogger(__name__)
 
-    def add_host(self, name: str, ip: str, port: int = SERVER_PORT) -> None:
+    def add_host(self, name: str, ip: str, port: int = SERVER_PORT, status: str = "pending") -> None:
         cur = self.con.cursor()
         try:
             cur.execute("""INSERT INTO ConnectedHosts 
-                        (name, ip, port, added_date, modified_date, is_online) 
-                        VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)""", (name, ip, port))
+                        (name, ip, port, added_date, modified_date, is_online, status) 
+                        VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, ?)""", (name, ip, port, status))
             self.con.commit()
         except sqlite3.IntegrityError:
             self.logger.error("Host already exists.")
