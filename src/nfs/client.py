@@ -23,7 +23,7 @@ def udp_client():
     client_socket.close()
 
 
-def tcp_client(server_name: str, server_port: int, data: dict):
+def tcp_client(server_name: str, server_port: int, data: dict) -> str:
     # server_name = '192.168.0.36'
     # server_port = 12000
     data.update({
@@ -51,6 +51,7 @@ def tcp_client(server_name: str, server_port: int, data: dict):
 
     ans = response.decode()
     print(f"Sua resposta é: {ans}")
+    return ans
 
 
 if __name__ == "__main__":

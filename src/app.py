@@ -63,14 +63,42 @@ def send_connect_host_request() -> None:
         "is_wsl_host": WSL_HOST
     }
 
-    tcp_client(data["dst_host_ip"], data["dst_host_port"], data)
+    ans: str = tcp_client(data["dst_host_ip"], data["dst_host_port"], data)
 
-    # with DatabaseConnector() as con:
-    #     db = DBhandler(con)
-    #     if port == "":
-    #         db.add_host(name, host)
-    #     else:
-    #         db.add_host(name, host, int(port))
+    if ans == "request-saved":
+        print("Connection request saved by the dst host. Adding to database.")
+        with DatabaseConnector() as con:
+            db = DBhandler(con)
+            db.add_host(name, host, port)
+    else:
+        print("Request not saved by the dst host.")
+
+def send_accept_connect_request(data: dict) -> bool:
+    data["type"] = "accept_connect_request"
+    ans: str = tcp_client(data["src_host_ip"], data["src_host_server_port"], data)
+
+    if ans == "confirmation-received":
+        with DatabaseConnector() as con:
+            db = DBhandler(con)
+            db.add_host("fix-naming", data["src_host_ip"], data["src_host_server_port"])
+        return True
+    else:
+        print("Confirmation message not received by the requesting host.")
+        return False
+    
+def list_connected_hosts() -> None:
+    print("Connected hosts:")
+    with DatabaseConnector() as con:
+        db = DBhandler(con)
+        hosts = db.get_hosts()
+
+    if len(hosts) == 0:
+        print("No hosts added found.")
+        return
+
+    for host in hosts:
+        print(f"    [ID={host["host_id"]}] (ip={host["ip"]}, name={host["name"]}, added_at={host["added_date"]}, status={host["status"]})")
+
 
 def review_pending_connection_requests() -> None:
     if len(pendingConnectionRequests) == 0:
@@ -80,18 +108,46 @@ def review_pending_connection_requests() -> None:
     print("Pending connection requests:")
     for i, request in enumerate(pendingConnectionRequests):
         print(request)
-        # print(f"    {i + 1}. [ID={request["host_id"]}] {request["ip"]} ({request["name"]})")
+        print(f"    {i + 1}. (IP={request['src_host_ip']}, ServerPort={request["src_host_server_port"]}")
 
+    while True:
+        try:
+            option = int(input("Select a request to accept or reject (0 to exit): "))
+            if option > len(pendingConnectionRequests):
+                print("Invalid option.")
+            elif option == 0:
+                return
+            else:
+                break
+        except ValueError:
+            print("Invalid option.")
+    
+    selected_host_data = pendingConnectionRequests[option - 1]
+    
+
+    action = input("Do you want to accept? (y/n): ").lower()
+    while True:
+        if action == "y":
+            print("Request accepted.")
+            if send_accept_connect_request(selected_host_data):
+                pendingConnectionRequests.pop(option - 1)
+                print("Request removed from pending list.")
+            break
+        elif action == "n":
+            print("Request rejected is not implemented yet. Just stop the program to remove the request.")
+            break
+        else:
+            print("Invalid action.")
 
 def select_a_host() -> dict | None:
     print("Select a host:")
 
     with DatabaseConnector() as con:
         db = DBhandler(con)
-        hosts = db.get_hosts()
+        hosts = db.get_hosts(filter_by="connected")
 
     if len(hosts) == 0:
-        print("No hosts added found.")
+        print("No hosts connected.")
         return None
 
     for i, host in enumerate(hosts):
@@ -155,6 +211,7 @@ def main():
         print("    4. Sum two numbers")
         print("    5. Send connection request to another host")
         print("    6. Review pending connection requests")
+        print("    7. list connected hosts")
         print("    0. Exit")
 
         try:
@@ -178,6 +235,8 @@ def main():
                 send_connect_host_request()
             elif option == 6:
                 review_pending_connection_requests()
+            elif option == 7:
+                list_connected_hosts()
             else:
                 print("Exiting app...")
                 sys.exit()

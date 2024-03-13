@@ -54,9 +54,14 @@ class DBhandler:
             self.logger.error(traceback.format_exc())
             self.con.rollback()
 
-    def get_hosts(self) -> list[dict]:
+    def get_hosts(self, filter_by="all") -> list[dict]:
         cur = self.con.cursor()
-        cur.execute("SELECT * FROM ConnectedHosts")
+        if filter_by == "connected":
+            cur.execute("""SELECT * FROM ConnectedHosts
+                        WHERE status = 'connected'""")
+        else:
+            cur.execute("SELECT * FROM ConnectedHosts")
+        
         hosts: list[dict] = []
         
         for host in cur.fetchall():
@@ -73,3 +78,9 @@ class DBhandler:
             raise ValueError("Host ID does not exist!")
         
         return dict(row)
+
+    def update_host_status(self, ip: str, status: str) -> None:
+        cur = self.con.cursor()
+        cur.execute("UPDATE ConnectedHosts SET status='connected' WHERE ip=?", (ip,))
+        self.con.commit()
+        self.logger.info(f"Host {ip} status updated to connected.")

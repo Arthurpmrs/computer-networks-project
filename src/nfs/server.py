@@ -66,16 +66,24 @@ def handle_request(message: str, client_address: tuple[str, str]) -> str:
             return "Invalid data sent."
     elif request_type == "connect_host_request":
         logger.info("Another host has sent a connection request.")
-        print(data)
-        print(client_address)
+
         if data.get("is_wsl_host"):
+            logger.warning("Host is running on WSL. Updating src IP with incoming client address...")
             data.update({"src_host_ip": client_address[0]})
-        # data.update({"requesting_host_ip": client_address[0]})
-        # data.update({"requesting_host_port": client_address[1]})
 
         pendingConnectionRequests.append(data)
         logger.info("Request saved. Waiting confirmation.")
-        return "Request saved. Waiting confirmation."
+
+        return "request-saved"
+    elif request_type == "accept_connect_request":
+        logger.info(f"Connection accepted by host ({data["dst_host_ip"]}:{data["dst_host_port"]})")
+
+        # Change status on database
+        with DatabaseConnector as con:
+            db = DBhandler(con)
+            db.update_host_status(data["dst_host_ip"], "connected")
+
+        return "confirmation-received"
     else:
         logger.error("Host sent an invalid request.")
         return "Invalid request."
