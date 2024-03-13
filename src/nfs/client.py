@@ -1,5 +1,6 @@
+import json
 from socket import socket, AF_INET, SOCK_DGRAM, SOCK_STREAM
-
+from nfs.config import SERVER_PORT
 
 def udp_client():
     server_name = '192.168.0.36'
@@ -22,16 +23,21 @@ def udp_client():
     client_socket.close()
 
 
-def tcp_client(server_name: str, message: str):
+def tcp_client(server_name: str, server_port: int, data: dict):
     # server_name = '192.168.0.36'
-    server_port = 12000
-
+    # server_port = 12000
+    data.update({
+        "src_host_ip": socket.gethostbyname(socket.gethostname()),
+        "src_host_server_port": SERVER_PORT
+    })
+    
+    message = json.dumps(data)
     # n = input("Digite um número para ser elevado ao quadrado: ")
 
     # message = str(number).encode()
 
     client_socket = socket(AF_INET, SOCK_STREAM)
-    client_socket.connect((server_name, server_port))
+    client_socket.connect((server_name, data["dst_host_port"]))
 
     print(f"Requesting to server (ip={server_name}, port={server_port})...")
     client_socket.send(message.encode())

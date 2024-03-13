@@ -56,15 +56,12 @@ def send_connect_host_request() -> None:
 
     data: dict[str, str] = {
         "type": "connect_host_request",
-        "name": name,
-        "ip": host,
-        "port": port
+        "dst_host_name": name,
+        "dst_host_ip": host,
+        "dst_host_port": port,
     }
 
-    if port != "":
-        data["port"] = port
-
-    tcp_client(data["ip"], json.dumps(data))
+    tcp_client(data["dst_host_ip"], data["dst_host_port"], data)
 
     # with DatabaseConnector() as con:
     #     db = DBhandler(con)
@@ -80,7 +77,8 @@ def review_pending_connection_requests() -> None:
     
     print("Pending connection requests:")
     for i, request in enumerate(pendingConnectionRequests):
-        print(f"    {i + 1}. [ID={request["host_id"]}] {request["ip"]} ({request["name"]})")
+        print(request)
+        # print(f"    {i + 1}. [ID={request["host_id"]}] {request["ip"]} ({request["name"]})")
 
 
 def select_a_host() -> dict | None:
@@ -108,31 +106,31 @@ def select_a_host() -> dict | None:
         print("Invalid option.")
         return None
         
-def handle_square(selected_host: str) -> None:
-    number = input("\nEnter a number: ")
-    if selected_host == "":
-        print("You must select a host first.")
-        return
+# def handle_square(selected_host: str) -> None:
+#     number = input("\nEnter a number: ")
+#     if selected_host == "":
+#         print("You must select a host first.")
+#         return
     
-    data: dict[str, str] = {
-        "type": "square",
-        "number": number
-    }
+#     data: dict[str, str] = {
+#         "type": "square",
+#         "number": number
+#     }
 
-    tcp_client(selected_host, json.dumps(data))
+#     tcp_client(selected_host, json.dumps(data))
 
-def handle_sum(selected_host: str) -> None:
-    a = input("\nEnter the first number: ")
-    b = input("Enter the second number: ")
+# def handle_sum(selected_host: str) -> None:
+#     a = input("\nEnter the first number: ")
+#     b = input("Enter the second number: ")
     
     
-    data: dict[str, str] = {
-        "type": "sum",
-        "a": a,
-        "b": b
-    }
+#     data: dict[str, str] = {
+#         "type": "sum",
+#         "a": a,
+#         "b": b
+#     }
 
-    tcp_client(selected_host, json.dumps(data))
+#     tcp_client(selected_host, json.dumps(data))
 
 def main():
     print("App started")
@@ -164,16 +162,16 @@ def main():
                 add_host()
             elif option == 2:
                 selected_host = select_a_host()
-            elif option == 3:
-                if selected_host is None:
-                    print("You must select a host first.")
-                    continue
-                handle_square(selected_host["ip"])
-            elif option == 4:
-                if selected_host is None:
-                    print("You must select a host first.")
-                    continue
-                handle_sum(selected_host["ip"])
+            # elif option == 3:
+            #     if selected_host is None:
+            #         print("You must select a host first.")
+            #         continue
+            #     handle_square(selected_host["ip"])
+            # elif option == 4:
+            #     if selected_host is None:
+            #         print("You must select a host first.")
+            #         continue
+            #     handle_sum(selected_host["ip"])
             elif option == 5:
                 send_connect_host_request()
             elif option == 6:
