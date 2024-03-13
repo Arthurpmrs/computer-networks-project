@@ -80,7 +80,7 @@ def send_accept_connect_request(data: dict) -> bool:
     if ans == "confirmation-received":
         with DatabaseConnector() as con:
             db = DBhandler(con)
-            db.add_host("fix-naming", data["src_host_ip"], data["src_host_server_port"])
+            db.add_host("fix-naming", data["src_host_ip"], data["src_host_server_port"], status="connected")
         return True
     else:
         print("Confirmation message not received by the requesting host.")
