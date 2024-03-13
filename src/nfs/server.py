@@ -66,8 +66,13 @@ def handle_request(message: str, client_address: tuple[str, str]) -> str:
             return "Invalid data sent."
     elif request_type == "connect_host_request":
         logger.info("Another host has sent a connection request.")
-        data.update({"requesting_host_ip": client_address[0]})
-        data.update({"requesting_host_port": client_address[1]})
+        print(data)
+        print(client_address)
+        if data.get("is_wsl_host"):
+            data.update({"src_host_ip": client_address[0]})
+        # data.update({"requesting_host_ip": client_address[0]})
+        # data.update({"requesting_host_port": client_address[1]})
+
         pendingConnectionRequests.append(data)
         logger.info("Request saved. Waiting confirmation.")
         return "Request saved. Waiting confirmation."

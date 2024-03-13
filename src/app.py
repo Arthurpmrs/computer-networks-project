@@ -4,6 +4,7 @@ import threading
 from nfs.server import tcp_server, pendingConnectionRequests
 from nfs.client import tcp_client
 from nfs.database import DatabaseConnector, DBhandler
+from nfs.config import WSL_HOST
 
 def validate_ip(ip: str) -> bool:
     ip_parts = ip.split(".")
@@ -59,6 +60,7 @@ def send_connect_host_request() -> None:
         "dst_host_name": name,
         "dst_host_ip": host,
         "dst_host_port": port,
+        "is_wsl_host": WSL_HOST
     }
 
     tcp_client(data["dst_host_ip"], data["dst_host_port"], data)
@@ -183,6 +185,6 @@ def main():
             print("Exiting app...")
             sys.exit()
 
-
 if __name__ == "__main__":
     main()
+    
