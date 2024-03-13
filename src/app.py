@@ -1,7 +1,7 @@
 import sys
 import json
 import threading
-from nfs.server import tcp_server
+from nfs.server import tcp_server, pendingConnectionRequests
 from nfs.client import tcp_client
 from nfs.database import DatabaseConnector, DBhandler
 
@@ -38,6 +38,51 @@ def add_host() -> None:
 
     print(f"Host {name} ({host}, {port}) added to the list.")
 
+def send_connect_host_request() -> None:
+    print("To connect a new host, enter the following information:")
+    name = input("Enter the host name: ")
+    host = input("Enter the host ip: ")
+    port_str = input("Enter the host port (hit enter for default port 12000): ")
+    
+    if not validate_ip(host):
+        print("Invalid ip address.")
+        return
+    
+    try:
+        port = int(port_str) if port_str != "" else 12000
+    except ValueError:
+        print("Invalid port.")
+        return
+
+    data: dict[str, str] = {
+        "type": "connect_host_request",
+        "name": name,
+        "ip": host,
+        "port": port
+    }
+
+    if port != "":
+        data["port"] = port
+
+    tcp_client(data["ip"], json.dumps(data))
+
+    # with DatabaseConnector() as con:
+    #     db = DBhandler(con)
+    #     if port == "":
+    #         db.add_host(name, host)
+    #     else:
+    #         db.add_host(name, host, int(port))
+
+def review_pending_connection_requests() -> None:
+    if len(pendingConnectionRequests) == 0:
+        print("No pending connection requests found.")
+        return
+    
+    print("Pending connection requests:")
+    for i, request in enumerate(pendingConnectionRequests):
+        print(f"    {i + 1}. [ID={request["host_id"]}] {request["ip"]} ({request["name"]})")
+
+
 def select_a_host() -> dict | None:
     print("Select a host:")
 
@@ -63,7 +108,6 @@ def select_a_host() -> dict | None:
         print("Invalid option.")
         return None
         
-
 def handle_square(selected_host: str) -> None:
     number = input("\nEnter a number: ")
     if selected_host == "":
@@ -109,6 +153,8 @@ def main():
         print("    2. Select a host")
         print("    3. Get the square of a number from the selected host")
         print("    4. Sum two numbers")
+        print("    5. Send connection request to another host")
+        print("    6. Review pending connection requests")
         print("    0. Exit")
 
         try:
@@ -128,6 +174,10 @@ def main():
                     print("You must select a host first.")
                     continue
                 handle_sum(selected_host["ip"])
+            elif option == 5:
+                send_connect_host_request()
+            elif option == 6:
+                pass
             else:
                 print("Exiting app...")
                 sys.exit()

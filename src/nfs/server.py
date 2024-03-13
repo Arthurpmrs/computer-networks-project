@@ -5,8 +5,11 @@ import logging
 import threading
 from socket import socket, AF_INET, SOCK_DGRAM, SOCK_STREAM
 from nfs.config import SERVER_PORT, CONFIG_FOLDER
+from nfs.database import DatabaseConnector, DBhandler
 
 logger = logging.getLogger(__name__)
+
+pendingConnectionRequests: list[dict] = []
 
 def power_of_2(n: str) -> str:
     n_int = int(n)
@@ -17,6 +20,9 @@ def add(a: str, b: str) -> str:
     a_int = int(a)
     b_int = int(b)
     return str(b_int + a_int)
+
+
+
 
 def udp_server():
     server_port = 12000
@@ -40,7 +46,7 @@ def udp_server():
         server_socket.sendto(response.encode(), client_address)
 
 
-def handle_request(message: str) -> str:
+def handle_request(message: str, client_address: tuple[str, str]) -> str:
     try:
         data = json.loads(message)
         request_type = data["type"]
@@ -58,6 +64,12 @@ def handle_request(message: str) -> str:
         except KeyError:
             logger.error("Host sent invalid data.")
             return "Invalid data sent."
+    elif request_type == "connect_host_request":
+        logger.info("Another host has sent a connection request.")
+        data.update({"requesting_host_ip": client_address[0]})
+        data.update({"requesting_host_port": client_address[1]})
+        pendingConnectionRequests.append(data)
+        logger.info("Request saved. Waiting confirmation.")
     else:
         logger.error("Host sent an invalid request.")
         return "Invalid request."
@@ -72,7 +84,7 @@ def handle_client(connection_socket: socket, client_address: tuple[str, str]):
         logger.info(f"Recieving from {client_address}...")
         logger.info(f"    Client Message: {message}")
 
-        response = handle_request(message)
+        response = handle_request(message, client_address)
         connection_socket.send(response.encode())
 
     logger.info(f"TCP tunnel with {client_address} closed.")

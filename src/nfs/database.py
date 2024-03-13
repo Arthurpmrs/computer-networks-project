@@ -23,14 +23,15 @@ class DatabaseConnector:
     @staticmethod
     def create_tables(con) -> None:
         cur = con.cursor()
-        cur.execute("""CREATE TABLE IF NOT EXISTS SavedHosts (
+        cur.execute("""CREATE TABLE IF NOT EXISTS ConnectedHosts (
                 host_id INTEGER PRIMARY KEY,
                 name TEXT NOT NULL UNIQUE,
                 ip TEXT NOT NULL UNIQUE,
                 port INTEGER NOT NULL,
                 added_date DATETIME DEFAULT CURRENT_TIMESTAMP,
                 modified_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-                is_connected BOOLEAN
+                is_online BOOLEAN,
+                status TEXT DEFAULT 'pending'  
                 )""")
         
 class DBhandler:
@@ -41,8 +42,8 @@ class DBhandler:
     def add_host(self, name: str, ip: str, port: int = SERVER_PORT) -> None:
         cur = self.con.cursor()
         try:
-            cur.execute("""INSERT INTO SavedHosts 
-                        (name, ip, port, added_date, modified_date, is_connected) 
+            cur.execute("""INSERT INTO ConnectedHosts 
+                        (name, ip, port, added_date, modified_date, is_online) 
                         VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)""", (name, ip, port))
             self.con.commit()
         except sqlite3.IntegrityError:
@@ -55,7 +56,7 @@ class DBhandler:
 
     def get_hosts(self) -> list[dict]:
         cur = self.con.cursor()
-        cur.execute("SELECT * FROM SavedHosts")
+        cur.execute("SELECT * FROM ConnectedHosts")
         hosts: list[dict] = []
         
         for host in cur.fetchall():
@@ -65,7 +66,7 @@ class DBhandler:
     
     def get_host_by_id(self, host_id: int) -> dict:
         cur = self.con.cursor()
-        cur.execute("SELECT * FROM SavedHosts WHERE host_id=?", (host_id,))
+        cur.execute("SELECT * FROM ConnectedHosts WHERE host_id=?", (host_id,))
         row = cur.fetchone()
         
         if row is None:
