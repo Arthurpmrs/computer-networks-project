@@ -177,7 +177,7 @@ def main():
             elif option == 5:
                 send_connect_host_request()
             elif option == 6:
-                pass
+                review_pending_connection_requests()
             else:
                 print("Exiting app...")
                 sys.exit()
