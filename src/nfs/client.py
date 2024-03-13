@@ -1,5 +1,5 @@
 import json
-from socket import socket, AF_INET, SOCK_DGRAM, SOCK_STREAM
+from socket import socket, AF_INET, SOCK_DGRAM, SOCK_STREAM, gethostbyname, gethostname
 from nfs.config import SERVER_PORT
 
 def udp_client():
@@ -27,7 +27,7 @@ def tcp_client(server_name: str, server_port: int, data: dict):
     # server_name = '192.168.0.36'
     # server_port = 12000
     data.update({
-        "src_host_ip": socket.gethostbyname(socket.gethostname()),
+        "src_host_ip": gethostbyname(gethostname()),
         "src_host_server_port": SERVER_PORT
     })
     
