@@ -70,6 +70,7 @@ def handle_request(message: str, client_address: tuple[str, str]) -> str:
         data.update({"requesting_host_port": client_address[1]})
         pendingConnectionRequests.append(data)
         logger.info("Request saved. Waiting confirmation.")
+        return "Request saved. Waiting confirmation."
     else:
         logger.error("Host sent an invalid request.")
         return "Invalid request."
