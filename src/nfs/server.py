@@ -79,7 +79,7 @@ def handle_request(message: str, client_address: tuple[str, str]) -> str:
         logger.info(f"Connection accepted by host ({data["dst_host_ip"]}:{data["dst_host_port"]})")
 
         # Change status on database
-        with DatabaseConnector as con:
+        with DatabaseConnector() as con:
             db = DBhandler(con)
             db.update_host_status(data["dst_host_ip"], "connected")
 
